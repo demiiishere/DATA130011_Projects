@@ -11,3 +11,5 @@ run the model: run `test_model.py`
 Train your own model: run `test_train.py`
 
 Pytorch implemented version: run `train_pytorch.py`
+
+Evaluate the Pytorch model: run `eval_pytorch.py`
