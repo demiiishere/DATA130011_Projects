@@ -55,16 +55,19 @@ valid_loader = DataLoader(valid_dataset, batch_size=50)
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1)
-        self.relu = nn.ReLU()
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1, padding=1)
+        self.relu1 = nn.ReLU()
+        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1, padding=1)
+        self.relu2 = nn.ReLU()
         self.flatten = nn.Flatten()
-        self.fc1 = nn.Linear(8*28*28, 128)
+        self.fc1 = nn.Linear(16*28*28, 128)
         self.fc2 = nn.Linear(128, 10)
 
     def forward(self, x):
-        x = self.relu(self.conv(x))
+        x = self.relu1(self.conv1(x))
+        x = self.relu2(self.conv2(x))
         x = self.flatten(x)
-        x = self.relu(self.fc1(x))
+        x = self.relu1(self.fc1(x))
         return self.fc2(x)
 
 
@@ -93,7 +96,7 @@ class Runner:
                 total += x.size(0)
         return loss_total / total, correct / total
 
-    def train(self, train_loader, valid_loader, num_epochs=10, log_iters=10, save_dir='./best_models'):
+    def train(self, train_loader, valid_loader, num_epochs=5, log_iters=10, save_dir='./best_models'):
         best_acc = 0
         for epoch in range(num_epochs):
             self.model.train()
@@ -126,11 +129,12 @@ class Runner:
                 best_acc = val_acc
                 torch.save(self.model.state_dict(), f"{save_dir}/best_model.pth")
 
-# ===== 4. 实例化并训练 =====
-model = CNN()  
-optimizer = optim.SGD(model.parameters(), lr=0.06, weight_decay=1e-4)
-scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[800, 2400, 4000], gamma=0.5)
-criterion = nn.CrossEntropyLoss()
+# ===== 4. training =====
+if __name__ == '__main__':
+    model = CNN()  
+    optimizer = optim.SGD(model.parameters(), lr=0.06, weight_decay=1e-4)
+    scheduler = optim.lr_scheduler.MultiStepLR(optimizer, milestones=[800, 2400, 4000], gamma=0.5)
+    criterion = nn.CrossEntropyLoss()
 
-runner = Runner(model, optimizer, scheduler, criterion, metric='accuracy')
-runner.train(train_loader, valid_loader, num_epochs=10, log_iters=100, save_dir='./best_models')
+    runner = Runner(model, optimizer, scheduler, criterion, metric='accuracy')
+    runner.train(train_loader, valid_loader, num_epochs=5, log_iters=100, save_dir='./best_models')
